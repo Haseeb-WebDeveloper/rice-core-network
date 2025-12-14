@@ -1,0 +1,240 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                              String                 @id @default(uuid())
+  email                           String                 @unique
+  username                        String                 @unique
+  firstName                       String?
+  lastName                        String?
+  avatar                          String?
+  bio                             String?
+  phone                           String?
+  isActive                        Boolean                @default(true)
+  isVerified                      Boolean                @default(false)
+  isSuspended                     Boolean                @default(false)
+  isPublic                        Boolean                @default(true)
+  role                            UserRole               @default(USER)
+  referralCode                    String                 @unique
+  referrerId                      String?
+  currentRankId                   String?
+  createdAt                       DateTime               @default(now())
+  updatedAt                       DateTime               @updatedAt
+  lastLoginAt                     DateTime?
+  deletedAt                       DateTime?
+  dailyProfits                    DailyProfit[]
+  investments                     Investment[]
+  referralIncomes                 ReferralIncome[]
+  referralRelationshipsAsReferred ReferralRelationship[] @relation("Referred")
+  referralRelationshipsAsReferrer ReferralRelationship[] @relation("Referrer")
+  transactions                    Transaction[]
+  rankAchievements                UserRank[]
+  currentRank                     Rank?                  @relation("CurrentUserRank", fields: [currentRankId], references: [id])
+  referrer                        User?                  @relation("ReferralHierarchy", fields: [referrerId], references: [id])
+  referrals                       User[]                 @relation("ReferralHierarchy")
+
+  @@index([referrerId])
+  @@index([currentRankId])
+  @@index([referralCode])
+  @@index([email])
+  @@index([username])
+  @@map("users")
+}
+
+model InvestmentPlan {
+  id                    String          @id @default(uuid())
+  name                  String
+  description           String?
+  minInvestment         Decimal         @db.Decimal(10, 2)
+  dailyProfitPercentage Decimal         @db.Decimal(5, 2)
+  duration              Int
+  allowedPaymentMethods PaymentMethod[]
+  isActive              Boolean         @default(true)
+  createdBy             String
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  deletedAt             DateTime?
+  investments           Investment[]
+
+  @@index([isActive])
+  @@index([createdBy])
+  @@map("investment_plans")
+}
+
+model Investment {
+  id              String           @id @default(uuid())
+  userId          String
+  planId          String
+  amount          Decimal          @db.Decimal(10, 2)
+  startDate       DateTime         @default(now())
+  endDate         DateTime
+  status          InvestmentStatus @default(ACTIVE)
+  paymentMethod   PaymentMethod
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+  dailyProfits    DailyProfit[]
+  plan            InvestmentPlan   @relation(fields: [planId], references: [id])
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referralIncomes ReferralIncome[]
+
+  @@index([userId])
+  @@index([planId])
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+  @@map("investments")
+}
+
+model DailyProfit {
+  id           String     @id @default(uuid())
+  investmentId String
+  userId       String
+  date         DateTime   @db.Date
+  amount       Decimal    @db.Decimal(10, 2)
+  isPaid       Boolean    @default(false)
+  paidAt       DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  investment   Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([investmentId, date])
+  @@index([investmentId])
+  @@index([userId])
+  @@index([date])
+  @@index([isPaid])
+  @@map("daily_profits")
+}
+
+model ReferralRelationship {
+  id         String   @id @default(uuid())
+  referrerId String
+  referredId String
+  level      Int
+  createdAt  DateTime @default(now())
+  referred   User     @relation("Referred", fields: [referredId], references: [id], onDelete: Cascade)
+  referrer   User     @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+
+  @@unique([referrerId, referredId, level])
+  @@index([referrerId])
+  @@index([referredId])
+  @@index([level])
+  @@map("referral_relationships")
+}
+
+model ReferralIncome {
+  id           String     @id @default(uuid())
+  investmentId String
+  recipientId  String
+  level        Int
+  percentage   Decimal    @db.Decimal(5, 2)
+  amount       Decimal    @db.Decimal(10, 2)
+  isPaid       Boolean    @default(false)
+  paidAt       DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  investment   Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  recipient    User       @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([investmentId])
+  @@index([recipientId])
+  @@index([level])
+  @@index([isPaid])
+  @@map("referral_incomes")
+}
+
+model Rank {
+  id                     String     @id @default(uuid())
+  rankNumber             Int        @unique
+  name                   String     @unique
+  requiredSelfInvestment Decimal    @db.Decimal(10, 2)
+  requiredTeamBusiness   Decimal    @db.Decimal(10, 2)
+  rewardAmount           Decimal    @db.Decimal(10, 2)
+  isActive               Boolean    @default(true)
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  achievements           UserRank[]
+  currentUsers           User[]     @relation("CurrentUserRank")
+
+  @@index([rankNumber])
+  @@index([isActive])
+  @@map("ranks")
+}
+
+model UserRank {
+  id           String    @id @default(uuid())
+  userId       String
+  rankId       String
+  achievedAt   DateTime  @default(now())
+  rewardPaidAt DateTime?
+  rewardAmount Decimal   @db.Decimal(10, 2)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  rank         Rank      @relation(fields: [rankId], references: [id])
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, rankId])
+  @@index([userId])
+  @@index([rankId])
+  @@index([achievedAt])
+  @@map("user_ranks")
+}
+
+model Transaction {
+  id          String            @id @default(uuid())
+  userId      String
+  type        TransactionType
+  amount      Decimal           @db.Decimal(10, 2)
+  status      TransactionStatus @default(PENDING)
+  description String?
+  relatedId   String?
+  relatedType String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+  @@index([relatedId, relatedType])
+  @@map("transactions")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum PaymentMethod {
+  EASYPAISA
+  JAZZCASH
+}
+
+enum InvestmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum TransactionType {
+  INVESTMENT
+  DAILY_PROFIT
+  REFERRAL_INCOME
+  RANK_REWARD
+  WITHDRAWAL
+  DEPOSIT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
