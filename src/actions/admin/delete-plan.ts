@@ -42,7 +42,7 @@ export async function deletePlan(planId: string) {
     return { success: true }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { error: error.errors[0].message }
+      return { error: error.message }
     }
     console.error('Error deleting investment plan:', error)
     return { error: error instanceof Error ? error.message : 'Failed to delete investment plan' }

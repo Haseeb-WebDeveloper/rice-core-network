@@ -87,7 +87,7 @@ export async function createWithdrawal(formData: FormData) {
     return { success: true, transaction }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { error: error.errors[0].message }
+      return { error: error.message }
     }
     console.error('Create withdrawal error:', error)
     return {

@@ -43,7 +43,7 @@ export async function verifyWithdrawPin(formData: FormData) {
     return { isValid, error: isValid ? undefined : 'Invalid PIN' }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { error: error.errors[0].message, isValid: false }
+      return { error: error.message, isValid: false }
     }
     console.error('Error verifying withdraw PIN:', error)
     return {

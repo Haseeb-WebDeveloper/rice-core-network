@@ -78,7 +78,7 @@ export async function processWithdrawal(formData: FormData) {
     return { success: true }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { error: error.errors[0].message }
+      return { error: error.message }
     }
     console.error('Error processing withdrawal:', error)
     return {

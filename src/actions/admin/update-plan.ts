@@ -57,7 +57,7 @@ export async function updatePlan(planId: string, formData: FormData) {
     return { success: true, plan }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { error: error.errors[0].message }
+      return { error: error.message }
     }
     console.error('Error updating plan:', error)
     return { error: error instanceof Error ? error.message : 'Failed to update plan' }
