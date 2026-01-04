@@ -60,11 +60,11 @@ async function generateReferralCode(): Promise<string> {
 
 async function createAdmin() {
   // Load environment variables
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://sztujlmxwahbluzrcrhm.supabase.co"
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6dHVqbG14d2FoYmx1enJjcmhtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NzM2MzczNCwiZXhwIjoyMDgyOTM5NzM0fQ.TSE15-ix2CpjGEx5bfFC2g_G79Bv_BcRNpe9v--hKq4"
-  const adminEmail = process.env.ADMIN_EMAIL || "web.dev.haseeb@gmail.com"
-  const adminPassword = process.env.ADMIN_PASSWORD || "Haseeb,.12"
-  const adminFullName = process.env.ADMIN_FULL_NAME || "Admin User"
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY !
+  const adminEmail = process.env.ADMIN_EMAIL!
+  const adminPassword = process.env.ADMIN_PASSWORD!
+  const adminFullName = process.env.ADMIN_FULL_NAME!
 
   if (!supabaseUrl || !supabaseServiceKey) {
     console.error('❌ Missing required environment variables:')
