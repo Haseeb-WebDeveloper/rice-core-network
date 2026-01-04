@@ -24,7 +24,7 @@ export default function RootLayout({
     >
       <body className="antialiased font-neue" suppressHydrationWarning>
         <Providers>
-          <main className="bg-[#090311] min-h-screen">{children}</main>
+          <main className=" min-h-screen">{children}</main>
         </Providers>
       </body>
     </html>

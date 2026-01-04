@@ -37,7 +37,7 @@ export async function login(formData: FormData) {
     return { success: true, user: data.user }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { error: error.errors[0].message }
+      return { error: error.message }
     }
     return { error: error instanceof Error ? error.message : 'An error occurred' }
   }

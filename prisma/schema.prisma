@@ -9,9 +9,7 @@ datasource db {
 model User {
   id                              String                 @id @default(uuid())
   email                           String                 @unique
-  username                        String                 @unique
-  firstName                       String?
-  lastName                        String?
+  fullName                        String
   avatar                          String?
   bio                             String?
   phone                           String?
@@ -23,6 +21,7 @@ model User {
   referralCode                    String                 @unique
   referrerId                      String?
   currentRankId                   String?
+  withdrawPin                     String?
   createdAt                       DateTime               @default(now())
   updatedAt                       DateTime               @updatedAt
   lastLoginAt                     DateTime?
@@ -42,22 +41,19 @@ model User {
   @@index([currentRankId])
   @@index([referralCode])
   @@index([email])
-  @@index([username])
   @@map("users")
 }
 
 model InvestmentPlan {
-  id                    String          @id @default(uuid())
+  id                    String       @id @default(uuid())
   name                  String
   description           String?
-  minInvestment         Decimal         @db.Decimal(10, 2)
-  dailyProfitPercentage Decimal         @db.Decimal(5, 2)
-  duration              Int
-  allowedPaymentMethods PaymentMethod[]
-  isActive              Boolean         @default(true)
+  minInvestment         Decimal      @db.Decimal(10, 2)
+  dailyProfitPercentage Decimal      @db.Decimal(5, 2)
+  isActive              Boolean      @default(true)
   createdBy             String
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
   deletedAt             DateTime?
   investments           Investment[]
 
@@ -72,12 +68,12 @@ model Investment {
   planId          String
   amount          Decimal          @db.Decimal(10, 2)
   startDate       DateTime         @default(now())
-  endDate         DateTime
-  status          InvestmentStatus @default(ACTIVE)
-  paymentMethod   PaymentMethod
+  status          InvestmentStatus @default(PENDING)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   deletedAt       DateTime?
+  paymentProofUrl String?
+  totalProfit     Decimal          @default(0) @db.Decimal(10, 2)
   dailyProfits    DailyProfit[]
   plan            InvestmentPlan   @relation(fields: [planId], references: [id])
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -87,7 +83,7 @@ model Investment {
   @@index([planId])
   @@index([status])
   @@index([startDate])
-  @@index([endDate])
+  @@index([totalProfit])
   @@map("investments")
 }
 
@@ -197,6 +193,8 @@ model Transaction {
   relatedType String?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
+  proofUrl    String?
+  walletId    String?
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -212,15 +210,11 @@ enum UserRole {
   USER
 }
 
-enum PaymentMethod {
-  EASYPAISA
-  JAZZCASH
-}
-
 enum InvestmentStatus {
   ACTIVE
   COMPLETED
   CANCELLED
+  PENDING
 }
 
 enum TransactionType {

@@ -1,31 +1,33 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { login } from '@/actions/auth/login'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const [showPassword, setShowPassword] = useState(false)
 
-  async function handleSubmit(formData: FormData) {
+  function handleSubmit(formData: FormData) {
     setError(null)
-    setLoading(true)
-
-    const result = await login(formData)
-
-    if (result.error) {
-      setError(result.error)
-      setLoading(false)
-    } else {
-      router.push('/user')
-      router.refresh()
-    }
+    
+    startTransition(() => {
+      login(formData).then((result) => {
+        if (result.error) {
+          setError(result.error)
+        } else {
+          router.push('/user')
+          router.refresh()
+        }
+      })
+    })
   }
 
   return (
@@ -41,20 +43,35 @@ export default function LoginPage() {
             type="email"
             placeholder="you@example.com"
             required
-            disabled={loading}
+            disabled={isPending}
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            required
-            disabled={loading}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              required
+              disabled={isPending}
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              disabled={isPending}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4 cursor-pointer" />
+              ) : (
+                <Eye className="h-4 w-4 cursor-pointer" />
+              )}
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -63,14 +80,21 @@ export default function LoginPage() {
           </div>
         )}
 
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Signing in...' : 'Sign In'}
+        <Button type="submit" className="w-full mt-2" disabled={isPending}>
+          {isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Signing in...
+            </>
+          ) : (
+            'Sign In'
+          )}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Don't have an account?{' '}
-        <Link href="/signup" className="text-primary hover:underline">
+        <Link href="/signup" className="underline font-medium text-foreground">
           Sign up
         </Link>
       </p>

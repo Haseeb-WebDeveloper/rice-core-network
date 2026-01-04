@@ -2,10 +2,7 @@
 CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'USER');
 
 -- CreateEnum
-CREATE TYPE "PaymentMethod" AS ENUM ('EASYPAISA', 'JAZZCASH');
-
--- CreateEnum
-CREATE TYPE "InvestmentStatus" AS ENUM ('ACTIVE', 'COMPLETED', 'CANCELLED');
+CREATE TYPE "InvestmentStatus" AS ENUM ('ACTIVE', 'COMPLETED', 'CANCELLED', 'PENDING');
 
 -- CreateEnum
 CREATE TYPE "TransactionType" AS ENUM ('INVESTMENT', 'DAILY_PROFIT', 'REFERRAL_INCOME', 'RANK_REWARD', 'WITHDRAWAL', 'DEPOSIT');
@@ -17,9 +14,7 @@ CREATE TYPE "TransactionStatus" AS ENUM ('PENDING', 'COMPLETED', 'FAILED', 'CANC
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "username" TEXT NOT NULL,
-    "firstName" TEXT,
-    "lastName" TEXT,
+    "fullName" TEXT NOT NULL,
     "avatar" TEXT,
     "bio" TEXT,
     "phone" TEXT,
@@ -31,6 +26,7 @@ CREATE TABLE "users" (
     "referralCode" TEXT NOT NULL,
     "referrerId" TEXT,
     "currentRankId" TEXT,
+    "withdrawPin" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "lastLoginAt" TIMESTAMP(3),
@@ -46,8 +42,6 @@ CREATE TABLE "investment_plans" (
     "description" TEXT,
     "minInvestment" DECIMAL(10,2) NOT NULL,
     "dailyProfitPercentage" DECIMAL(5,2) NOT NULL,
-    "duration" INTEGER NOT NULL,
-    "allowedPaymentMethods" "PaymentMethod"[],
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdBy" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -64,12 +58,12 @@ CREATE TABLE "investments" (
     "planId" TEXT NOT NULL,
     "amount" DECIMAL(10,2) NOT NULL,
     "startDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "endDate" TIMESTAMP(3) NOT NULL,
-    "status" "InvestmentStatus" NOT NULL DEFAULT 'ACTIVE',
-    "paymentMethod" "PaymentMethod" NOT NULL,
+    "status" "InvestmentStatus" NOT NULL DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "deletedAt" TIMESTAMP(3),
+    "paymentProofUrl" TEXT,
+    "totalProfit" DECIMAL(10,2) NOT NULL DEFAULT 0,
 
     CONSTRAINT "investments_pkey" PRIMARY KEY ("id")
 );
@@ -157,15 +151,14 @@ CREATE TABLE "transactions" (
     "relatedType" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "proofUrl" TEXT,
+    "walletId" TEXT,
 
     CONSTRAINT "transactions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_referralCode_key" ON "users"("referralCode");
@@ -181,9 +174,6 @@ CREATE INDEX "users_referralCode_idx" ON "users"("referralCode");
 
 -- CreateIndex
 CREATE INDEX "users_email_idx" ON "users"("email");
-
--- CreateIndex
-CREATE INDEX "users_username_idx" ON "users"("username");
 
 -- CreateIndex
 CREATE INDEX "investment_plans_isActive_idx" ON "investment_plans"("isActive");
@@ -204,7 +194,7 @@ CREATE INDEX "investments_status_idx" ON "investments"("status");
 CREATE INDEX "investments_startDate_idx" ON "investments"("startDate");
 
 -- CreateIndex
-CREATE INDEX "investments_endDate_idx" ON "investments"("endDate");
+CREATE INDEX "investments_totalProfit_idx" ON "investments"("totalProfit");
 
 -- CreateIndex
 CREATE INDEX "daily_profits_investmentId_idx" ON "daily_profits"("investmentId");
@@ -285,16 +275,16 @@ CREATE INDEX "transactions_createdAt_idx" ON "transactions"("createdAt");
 CREATE INDEX "transactions_relatedId_relatedType_idx" ON "transactions"("relatedId", "relatedType");
 
 -- AddForeignKey
-ALTER TABLE "users" ADD CONSTRAINT "users_referrerId_fkey" FOREIGN KEY ("referrerId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_currentRankId_fkey" FOREIGN KEY ("currentRankId") REFERENCES "ranks"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "investments" ADD CONSTRAINT "investments_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "users" ADD CONSTRAINT "users_referrerId_fkey" FOREIGN KEY ("referrerId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "investments" ADD CONSTRAINT "investments_planId_fkey" FOREIGN KEY ("planId") REFERENCES "investment_plans"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "investments" ADD CONSTRAINT "investments_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "daily_profits" ADD CONSTRAINT "daily_profits_investmentId_fkey" FOREIGN KEY ("investmentId") REFERENCES "investments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -303,10 +293,10 @@ ALTER TABLE "daily_profits" ADD CONSTRAINT "daily_profits_investmentId_fkey" FOR
 ALTER TABLE "daily_profits" ADD CONSTRAINT "daily_profits_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "referral_relationships" ADD CONSTRAINT "referral_relationships_referrerId_fkey" FOREIGN KEY ("referrerId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "referral_relationships" ADD CONSTRAINT "referral_relationships_referredId_fkey" FOREIGN KEY ("referredId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "referral_relationships" ADD CONSTRAINT "referral_relationships_referredId_fkey" FOREIGN KEY ("referredId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "referral_relationships" ADD CONSTRAINT "referral_relationships_referrerId_fkey" FOREIGN KEY ("referrerId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "referral_incomes" ADD CONSTRAINT "referral_incomes_investmentId_fkey" FOREIGN KEY ("investmentId") REFERENCES "investments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -315,10 +305,10 @@ ALTER TABLE "referral_incomes" ADD CONSTRAINT "referral_incomes_investmentId_fke
 ALTER TABLE "referral_incomes" ADD CONSTRAINT "referral_incomes_recipientId_fkey" FOREIGN KEY ("recipientId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_ranks" ADD CONSTRAINT "user_ranks_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "user_ranks" ADD CONSTRAINT "user_ranks_rankId_fkey" FOREIGN KEY ("rankId") REFERENCES "ranks"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_ranks" ADD CONSTRAINT "user_ranks_rankId_fkey" FOREIGN KEY ("rankId") REFERENCES "ranks"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "user_ranks" ADD CONSTRAINT "user_ranks_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "transactions" ADD CONSTRAINT "transactions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth/get-session'
+import { getCurrentUser } from '@/lib/auth/get-user'
 
 export default async function Home() {
-  const session = await getSession()
+  const user = await getCurrentUser()
 
-  if (session) {
-    redirect('/user')
+  if (user) {
+    // Redirect based on role
+    redirect(user.role === 'ADMIN' ? '/admin' : '/user')
   }
 
   redirect('/signup')
