@@ -6,14 +6,27 @@ import { createWithdrawal } from "@/actions/user/create-withdrawal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Wallet, Lock } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Loader2, Wallet, Lock, Plus } from "lucide-react";
 
-type WithdrawFormProps = {
+type WithdrawFormModalProps = {
   availableBalance: number;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 };
 
-export function WithdrawForm({ availableBalance }: WithdrawFormProps) {
+export function WithdrawFormModal({
+  availableBalance,
+  open,
+  onOpenChange,
+}: WithdrawFormModalProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -46,8 +59,10 @@ export function WithdrawForm({ availableBalance }: WithdrawFormProps) {
           setSuccess(true);
           // Reset form
           (e.currentTarget as HTMLFormElement).reset();
-          // Refresh page after a short delay
+          // Close modal and refresh page after a short delay
           setTimeout(() => {
+            setSuccess(false);
+            onOpenChange(false);
             router.refresh();
           }, 2000);
         }
@@ -56,17 +71,20 @@ export function WithdrawForm({ availableBalance }: WithdrawFormProps) {
   }
 
   return (
-    <Card className="max-w-3xl">
-      <CardHeader>
-        <CardTitle>Request Withdrawal</CardTitle>
-        <CardDescription>
-          Withdraw funds to your USDT BEP20 wallet address
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-6">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Request Withdrawal</DialogTitle>
+          <DialogDescription>
+            Withdraw funds to your USDT BEP20 wallet address
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="mb-4 p-4 rounded-lg bg-muted/50">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Available Balance</span>
+            <span className="text-sm font-medium text-muted-foreground">
+              Available Balance
+            </span>
             <span className="text-2xl font-bold text-foreground">
               ${availableBalance.toFixed(2)}
             </span>
@@ -106,7 +124,8 @@ export function WithdrawForm({ availableBalance }: WithdrawFormProps) {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              Make sure to enter the correct wallet address. Funds cannot be recovered if sent to the wrong address.
+              Make sure to enter the correct wallet address. Funds cannot be
+              recovered if sent to the wrong address.
             </p>
           </div>
 
@@ -131,35 +150,47 @@ export function WithdrawForm({ availableBalance }: WithdrawFormProps) {
           </div>
 
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="rounded-md bg-green-500/10 p-3 text-sm text-green-600 dark:text-green-500">
-              Withdrawal request submitted successfully! It will be reviewed by an admin shortly.
+            <div className="rounded-md bg-emerald-500/10 border border-emerald-500/20 p-3 text-sm text-emerald-600 dark:text-emerald-400">
+              Withdrawal request submitted successfully! It will be reviewed by
+              an admin shortly.
             </div>
           )}
 
-          <Button
-            type="submit"
-            className="w-full font-medium mt-2 text-md h-12"
-            variant="default"
-            disabled={isPending || availableBalance < 5}
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Processing...
-              </>
-            ) : (
-              "Submit Withdrawal Request"
-            )}
-          </Button>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isPending || availableBalance < 5}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Submit Request
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }
 

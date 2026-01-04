@@ -62,7 +62,7 @@ export function StatisticsCards({ statistics }: StatisticsCardsProps) {
           label="Total Profit"
           value={displayStats.totalProfit}
           format={currencyFormat}
-          valueClassName="text-emerald-600 dark:text-emerald-400"
+          className="border-y border-r"
         />
 
         <StatCard
@@ -70,18 +70,21 @@ export function StatisticsCards({ statistics }: StatisticsCardsProps) {
           label="Today Profit"
           value={displayStats.todayProfit}
           format={currencyFormat}
+          className="border lg:border-l-0"
         />
 
         <StatCard
           icon={Users}
           label="Level 1 Team"
           value={displayStats.level1Team}
+          className="border-y border-r lg:border-l lg:border-t-0"
         />
 
         <StatCard
           icon={Users}
           label="All Level Team"
           value={displayStats.allLevelTeam}
+          className="border lg:border-l-0 lg:border-t-0"
         />
 
         <StatCard
@@ -89,6 +92,7 @@ export function StatisticsCards({ statistics }: StatisticsCardsProps) {
           label="Total Withdrawal"
           value={displayStats.totalWithdrawal}
           format={currencyFormat}
+          className="border-y border-r lg:border-l-0 lg:border-t-0"
         />
       </div>
     </NumberFlowGroup>

@@ -70,7 +70,7 @@ export default async function PlansPage() {
                           Total Return
                         </span>
                         <span className="font-semibold text-green-600">
-                          200%
+                          2X
                         </span>
                       </div>
 

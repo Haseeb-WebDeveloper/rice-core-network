@@ -113,7 +113,7 @@ export function PendingInvestmentCard({ investment }: PendingInvestmentCardProps
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
                 <p className="text-xs text-muted-foreground">Total Return</p>
-                <p className="font-medium text-foreground text-green-600">200%</p>
+                <p className="font-medium text-foreground">2X</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Daily Profit</p>

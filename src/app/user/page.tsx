@@ -5,13 +5,15 @@ import { getUserStatistics } from "@/lib/user/get-user-statistics";
 import { InvestmentCard } from "@/components/investments/investment-card";
 import { StatisticsCards } from "@/components/user/statistics-cards";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  TrendingUp,
-  ArrowRight,
-} from "lucide-react";
+import { TrendingUp, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
+import Image from "next/image";
+import { CopyButton } from "@/components/investments/copy-button";
+import { maxChar } from "@/lib/max-char";
+import { prisma } from "@/lib/prisma";
+import { ReferralLink } from "@/components/user/referral-link";
 
 export default async function UserPage() {
   const user = await getCurrentUser();
@@ -19,6 +21,14 @@ export default async function UserPage() {
   if (!user) {
     redirect("/login");
   }
+
+  // Fetch referrer if exists
+  const referrer = user.referrerId
+    ? await prisma.user.findUnique({
+        where: { id: user.referrerId },
+        select: { fullName: true, avatar: true },
+      })
+    : null;
 
   const investments = await getUserInvestments(user.id);
   const statistics = await getUserStatistics(user.id);
@@ -34,11 +44,74 @@ export default async function UserPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">My Investments</h1>
-        <p className="text-muted-foreground">
-          View and track all your investment plans
-        </p>
+      {/* User Info */}
+      <div className="flex items-center justify-between pb-2">
+        <div className="flex items-center gap-3">
+          {user.avatar ? (
+            <Image
+              src={user.avatar || ""}
+              alt="Avatar"
+              width={100}
+              height={100}
+              className="w-20 h-20 rounded-full border border-foreground/40"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-primary/10 text-primary font-semibold text-xl flex items-center justify-center border border-foreground/40">
+              <span>
+                {user.fullName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2)}
+              </span>
+            </div>
+          )}
+          <div className="flex flex-col">
+            <p className="text-xl font-bold">{maxChar(user.fullName, 20)}</p>
+            <div className="flex flex-col gap-2">
+              <ReferralLink referralCode={user.referralCode} />
+            </div>
+
+            {referrer ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Referred by: {' '}
+                </span>
+                {referrer.avatar ? (
+                  <Image
+                    src={referrer.avatar}
+                    alt={referrer.fullName}
+                    width={20}
+                    height={20}
+                    className="w-5 h-5 rounded-full"
+                  />
+                ) : (
+                  <div className="w-5 h-5 rounded-full bg-primary/10 text-primary font-semibold text-[8px] leading-0 flex items-center justify-center border border-foreground/60">
+                    <span>
+                      {referrer.fullName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </span>
+                  </div>
+                )}
+                <span className="text-sm font-medium text-foreground">
+                  {maxChar(referrer.fullName, 20)}
+                </span>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Referred by: {' '}
+                <span className="font-semibold text-foreground font-mono">
+                  Ricecore
+                </span>
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Statistics Cards */}

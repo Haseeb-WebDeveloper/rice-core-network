@@ -147,7 +147,7 @@ const columns: ColumnDef<UserData>[] = [
               alt={user.fullName}
               width={32}
               height={32}
-              className="rounded-full object-cover"
+              className="rounded-full object-cover aspect-square"
             />
           ) : (
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold">
@@ -550,7 +550,7 @@ export function UsersTable({ data }: UsersTableProps) {
         </div>
 
       {/* Table */}
-      <div className="w-full overflow-x-auto rounded-lg border border-border bg-background">
+      <div className="w-full overflow-x-auto rounded-lg border border-border bg-background @container/main container">
         <Table className="w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

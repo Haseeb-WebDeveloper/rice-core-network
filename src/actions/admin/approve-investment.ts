@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { revalidatePath } from 'next/cache'
+import { distributeReferralCommissions } from '@/lib/admin/distribute-referral-commissions'
 
 export async function approveInvestment(investmentId: string, amount?: number) {
   try {
@@ -33,6 +34,18 @@ export async function approveInvestment(investmentId: string, amount?: number) {
         ...(amount !== undefined && { amount }),
       },
     })
+
+    // Distribute referral commissions (don't fail approval if commission fails)
+    try {
+      await distributeReferralCommissions(investmentId)
+    } catch (commissionError) {
+      // Log error but don't fail the approval
+      console.error(
+        `Failed to distribute referral commissions for investment ${investmentId}:`,
+        commissionError
+      )
+      // Continue with approval even if commission distribution fails
+    }
 
     revalidatePath('/admin')
     return { success: true }

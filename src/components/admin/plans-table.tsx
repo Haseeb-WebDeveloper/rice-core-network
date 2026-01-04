@@ -434,7 +434,7 @@ export function PlansTable({ data }: PlansTableProps) {
       </div>
 
       {/* Table */}
-      <div className="w-full overflow-x-auto rounded-lg border border-border bg-background">
+      <div className="w-full overflow-x-auto rounded-lg border border-border bg-background @container/main container">
         <Table className="w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

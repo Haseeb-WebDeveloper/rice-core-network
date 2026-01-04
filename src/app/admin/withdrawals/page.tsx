@@ -1,5 +1,5 @@
 import { getPendingWithdrawals } from "@/lib/admin/get-pending-withdrawals";
-import { WithdrawalCard } from "@/components/admin/withdrawal-card";
+import { WithdrawalsTable } from "@/components/admin/withdrawals-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock } from "lucide-react";
 
@@ -28,11 +28,7 @@ export default async function AdminWithdrawalsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {withdrawals.map((withdrawal) => (
-            <WithdrawalCard key={withdrawal.id} withdrawal={withdrawal} />
-          ))}
-        </div>
+        <WithdrawalsTable withdrawals={withdrawals} />
       )}
     </div>
   );

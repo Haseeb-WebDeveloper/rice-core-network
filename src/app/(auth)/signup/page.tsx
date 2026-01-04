@@ -1,20 +1,56 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signup } from "@/actions/auth/signup";
+import { getReferrerByCode } from "@/actions/auth/get-referrer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, User } from "lucide-react";
+import Image from "next/image";
 
-export default function SignupPage() {
+type ReferrerInfo = {
+  id: string;
+  fullName: string;
+  avatar: string | null;
+  referralCode: string;
+};
+
+function SignupForm() {
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get("ref");
+  
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState(false);
   const [userEmail, setUserEmail] = useState<string>("");
+  const [referrer, setReferrer] = useState<ReferrerInfo | null>(null);
+  const [loadingReferrer, setLoadingReferrer] = useState(false);
+
+  // Fetch referrer info if ref code exists in URL
+  useEffect(() => {
+    if (refCode) {
+      setLoadingReferrer(true);
+      getReferrerByCode(refCode)
+        .then((result) => {
+          if (result.referrer && !result.error) {
+            setReferrer(result.referrer);
+          } else if (result.error) {
+            setError(result.error);
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching referrer:", err);
+          setError("Failed to load referrer information");
+        })
+        .finally(() => {
+          setLoadingReferrer(false);
+        });
+    }
+  }, [refCode]);
 
   function handleSubmit(formData: FormData) {
     setError(null);
@@ -55,19 +91,18 @@ export default function SignupPage() {
             </p> */}
           </div>
           <div className="grid grid-cols-2 justify-center gap-2 w-full pt-4">
-            <Button
+            <button
               onClick={() => {
                 setSuccess(false);
                 setUserEmail("");
               }}
-              variant="outline"
-              className="w-full"
+              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors underline"
             >
               Back to sign up
-            </Button>
-            <Button variant="outline" className="w-full">
+            </button>
+            <button className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors underline">
               <Link href="/login">Go to sign in</Link>
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -76,6 +111,51 @@ export default function SignupPage() {
 
   return (
     <div className="rounded-lg border bg-card p-8 shadow-lg">
+      {/* Show referrer info at top if ref code exists */}
+      {refCode && (
+        <div className="mb-6 pb-6 border-b">
+          {loadingReferrer ? (
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Loading referrer information...</p>
+            </div>
+          ) : referrer ? (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Referred by:</span>
+                {referrer.avatar ? (
+                  <Image
+                    src={referrer.avatar}
+                    alt={referrer.fullName}
+                    width={24}
+                    height={24}
+                    className="w-6 h-6 rounded-full"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-semibold text-xs flex items-center justify-center">
+                    <span>
+                      {referrer.fullName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </span>
+                  </div>
+                )}
+                <span className="text-sm font-medium text-foreground">
+                  {referrer.fullName}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-destructive">
+              <span>Invalid referral code. Please remove it from the URL or enter a valid code.</span>
+            </div>
+          )}
+        </div>
+      )}
+
       <h1 className="mb-6 text-2xl font-bold">Create Account</h1>
 
       <form action={handleSubmit} className="space-y-4">
@@ -133,17 +213,29 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="referralCode">Referral Code (Optional)</Label>
-          <Input
-            id="referralCode"
+        {/* Hide referral code input if ref parameter exists in URL */}
+        {!refCode && (
+          <div className="space-y-2">
+            <Label htmlFor="referralCode">Referral Code (Optional)</Label>
+            <Input
+              id="referralCode"
+              name="referralCode"
+              type="text"
+              placeholder="Enter referral code"
+              maxLength={20}
+              disabled={isPending}
+            />
+          </div>
+        )}
+        
+        {/* Hidden input to pass referral code from URL if it exists */}
+        {refCode && referrer && (
+          <input
+            type="hidden"
             name="referralCode"
-            type="text"
-            placeholder="Enter referral code"
-            maxLength={20}
-            disabled={isPending}
+            value={referrer.referralCode}
           />
-        </div>
+        )}
 
         {error && (
           <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
@@ -170,5 +262,19 @@ export default function SignupPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="rounded-lg border bg-card p-8 shadow-lg">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   );
 }

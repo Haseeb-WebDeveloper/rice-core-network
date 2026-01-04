@@ -25,7 +25,7 @@ export function StatCard({
   valueClassName = "",
 }: StatCardProps) {
   return (
-    <div className={`bg-primary/10 border-x border-b lg:border-l-0 lg:border-y lg:border-r ${className}`}>
+    <div className={`bg-primary/10  ${className}`}>
       <div className="p-5">
         <div className="flex items-start justify-start gap-2 mb-2">
           <Icon className="h-5 w-5 text-muted-foreground" />

@@ -21,7 +21,7 @@ export function LevelCard({
   totalCommission,
 }: LevelCardProps) {
   return (
-    <div className="bg-primary/10 border">
+    <div className="bg-primary/10 border rounded-lg">
       <div className="p-5 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">

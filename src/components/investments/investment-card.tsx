@@ -137,7 +137,7 @@ export function InvestmentCard({ investment }: InvestmentCardProps) {
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Total Return</span>
-              <span className="font-medium">200%</span>
+              <span className="font-medium">2X</span>
             </div>
             {investment.status === "ACTIVE" && (
               <div className="space-y-2 pt-2">

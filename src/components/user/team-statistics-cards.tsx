@@ -48,6 +48,7 @@ export function TeamStatisticsCards({ stats }: TeamStatisticsCardsProps) {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           }}
+          className="border-y border-r"
         />
 
         <StatCard
@@ -61,6 +62,7 @@ export function TeamStatisticsCards({ stats }: TeamStatisticsCardsProps) {
             maximumFractionDigits: 2,
           }}
           valueClassName="text-emerald-600 dark:text-emerald-400"
+          className="border border-t-0 lg:border-l-0 lg:border-t"
         />
 
         <StatCard
@@ -73,6 +75,7 @@ export function TeamStatisticsCards({ stats }: TeamStatisticsCardsProps) {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           }}
+          className="border-b border-r lg:border-t"
         />
       </div>
     </NumberFlowGroup>

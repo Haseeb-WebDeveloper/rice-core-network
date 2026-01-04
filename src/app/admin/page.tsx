@@ -1,13 +1,9 @@
 import { getPendingInvestments } from "@/lib/admin/get-pending-investments";
 import { getAdminStatistics } from "@/lib/admin/get-statistics";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { PendingInvestmentCard } from "@/components/admin/pending-investment-card";
-import { Users, TrendingUp, Clock, DollarSign } from "lucide-react";
+import { AdminStatisticsCards } from "@/components/admin/admin-statistics-cards";
+import { Clock } from "lucide-react";
 
 export default async function AdminPage() {
   const [pendingInvestments, statistics] = await Promise.all([
@@ -25,67 +21,13 @@ export default async function AdminPage() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statistics.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">Registered users</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Investments
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {statistics.totalInvestments}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {statistics.activeInvestments} active
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pending Approvals
-            </CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">
-              {statistics.pendingInvestments}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              ${Number(statistics.pendingInvestmentAmount).toFixed(2)} pending
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Investment
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${Number(statistics.totalInvestmentAmount).toFixed(2)}
-            </div>
-            <p className="text-xs text-muted-foreground">All time</p>
-          </CardContent>
-        </Card>
-      </div>
+      <AdminStatisticsCards
+        statistics={{
+          ...statistics,
+          totalInvestmentAmount: Number(statistics.totalInvestmentAmount),
+          pendingInvestmentAmount: Number(statistics.pendingInvestmentAmount),
+        }}
+      />
 
       {/* Pending Investments */}
       <div>

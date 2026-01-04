@@ -14,7 +14,7 @@ const updateWithdrawPinSchema = z.object({
       message: 'PIN must be exactly 4 digits',
     }),
   confirmPin: z.string().transform((val) => val.trim()),
-  currentPin: z.string().optional(),
+  currentPin: z.string().nullish(), // Accepts null, undefined, or string
 })
 
 export async function updateWithdrawPin(formData: FormData) {
@@ -36,15 +36,17 @@ export async function updateWithdrawPin(formData: FormData) {
     }
 
     // Validate input
+    // Convert null to undefined for optional fields
+    const currentPinValue = formData.get('currentPin')
     const rawData = {
       pin: formData.get('pin') as string,
       confirmPin: formData.get('confirmPin') as string,
-      currentPin: formData.get('currentPin') as string | null,
+      currentPin: currentPinValue === null ? undefined : (currentPinValue as string),
     }
 
     // If user already has a PIN, require current PIN verification
     if (currentUser.withdrawPin) {
-      if (!rawData.currentPin || rawData.currentPin.trim().length === 0) {
+      if (!rawData.currentPin || typeof rawData.currentPin !== 'string' || rawData.currentPin.trim().length === 0) {
         return { error: 'Current PIN is required to change PIN' }
       }
 

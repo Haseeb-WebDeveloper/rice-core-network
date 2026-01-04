@@ -31,8 +31,8 @@ export default async function PlanDetailPage({ params }: PageProps) {
   const tokenName = process.env.TOKEN_NAME || "USDT(BEP20)";
 
   // Calculate estimated values
-  const estimatedDailyProfit = (minInvestment * dailyProfit) / 100;
-  const estimatedTotalReturn = minInvestment * 2; // 200% return (2x investment)
+  // const estimatedDailyProfit = (minInvestment * dailyProfit) / 100;
+  // const estimatedTotalReturn = minInvestment * 2; // 200% return (2x investment)
 
   return (
     <div className="">
@@ -82,7 +82,7 @@ export default async function PlanDetailPage({ params }: PageProps) {
           <span className="text-sm font-medium text-foreground">
             Total Return
           </span>
-          <span className="font-medium font-mono">200%</span>
+          <span className="font-medium font-mono">2X</span>
         </div>
       </div>
 

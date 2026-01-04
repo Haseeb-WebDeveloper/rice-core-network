@@ -6,14 +6,9 @@ import { Button } from "@/components/ui/button";
 import { logout } from "@/actions/auth/logout";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
-type SidebarProps = {
-  user: {
-    avatar: string | null;
-    fullName: string;
-  } | null;
-};
+import Link from "next/link";
 
-export function Sidebar({ user }: SidebarProps) {
+export function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -29,62 +24,27 @@ export function Sidebar({ user }: SidebarProps) {
     router.refresh();
   }
 
-  // Get user display name
-  const displayName = user?.fullName || "User";
-
-  // Get avatar initials for fallback
-  const avatarInitials = user?.fullName
-    ? user.fullName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "U";
-
   return (
     <>
       {/* Mobile user avatar button - Hidden when sidebar is open */}
       {!isMobileOpen && (
-        <div className="lg:hidden fixed top-0 pt-4 left-0 px-4 z-50 w-full pb-4 border-b flex items-center justify-between bg-background">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsMobileOpen(!isMobileOpen)}
-              className="relative w-10 h-10 rounded-full bg-background border border-border shadow-md overflow-hidden hover:ring-2 hover:ring-primary/20 transition-all"
-            >
-              {user?.avatar ? (
-                <Image
-                  src={user.avatar}
-                  alt={displayName}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-semibold text-sm">
-                  {avatarInitials}
-                </div>
-              )}
-            </button>
-            <span className="text-md font-medium capitalize">
-              {displayName && displayName.length > 20
-                ? displayName.slice(0, 20) + "..."
-                : displayName}
-            </span>
-          </div>
-
-          <Button
-            variant="outline"
-            className="justify-start gap-3 text-muted-foreground hover:text-destructive"
-            onClick={handleLogout}
-          >
+        <div className="lg:hidden fixed top-0 pt-6 left-0 px-4 z-50 w-full pb-5 border-b flex items-center justify-between bg-background">
+          <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/icons/logout.svg"
-              alt="Logout"
-              width={16}
-              height={16}
+              src="/logo/logo.svg"
+              alt="Logo"
+              width={100}
+              height={100}
+              className="w-fit h-8 mx-auto"
             />
-            <span>Logout</span>
-          </Button>
+          </Link>
+
+          <button
+            className="justify-start gap-3 text-muted-foreground hover:text-destructive"
+            onClick={() => setIsMobileOpen(!isMobileOpen)}
+          >
+            <Image src="/icons/menu.svg" alt="Menu" width={24} height={24} />
+          </button>
         </div>
       )}
 
@@ -120,28 +80,16 @@ export function Sidebar({ user }: SidebarProps) {
           </div>
 
           {/* User Info - Mobile - Aligned with page padding */}
-          <div className="lg:hidden px-4 py-4 border-b border-border">
-            <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                {user?.avatar ? (
-                  <Image
-                    src={user.avatar}
-                    alt={displayName}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-semibold text-sm">
-                    {avatarInitials}
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-md text-foreground truncate">
-                  {displayName}
-                </p>
-              </div>
-            </div>
+          <div className="lg:hidden px-4 pt-6 pb-5 border-b border-border">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/logo/logo.svg"
+                alt="Logo"
+                width={100}
+                height={100}
+                className="w-fit h-8 mx-auto"
+              />
+            </Link>
           </div>
 
           {/* Navigation */}
