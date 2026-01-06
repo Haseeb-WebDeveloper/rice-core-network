@@ -5,10 +5,22 @@ import { geistMono, geistSans, neueHaas, montserrat } from "@/lib/fonts";
 
 export const metadata: Metadata = {
   title: {
-    default: "Rice Core Network Admin",
-    template: "%s • Rice Core Network",
+    default: "Rice Core",
+    template: "%s • Rice Core",
   },
-  description: "Admin dashboard for Rice Core Network",
+  icons: {
+    icon: "/favicon.ico",
+  },
+  description: "Rice Core",
+  openGraph: {
+    title: "Rice Core",
+    description: "Rice Core is a platform for investing.",
+    url: "https://ricecore.online",
+    siteName: "Rice Core",
+    images: [
+      { url: "/logo/logo-square.jpeg" },
+    ],
+  },
 };
 
 export default function RootLayout({

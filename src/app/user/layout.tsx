@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/dashboard/sidebar";
-import { getCurrentUser } from "@/lib/auth/get-user";
 
 export default async function UserLayout({
   children,
