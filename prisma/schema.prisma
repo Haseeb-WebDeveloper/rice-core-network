@@ -49,6 +49,7 @@ model InvestmentPlan {
   name                  String
   description           String?
   minInvestment         Decimal      @db.Decimal(10, 2)
+  maxInvestment         Decimal      @db.Decimal(10, 2)
   dailyProfitPercentage Decimal      @db.Decimal(5, 2)
   isActive              Boolean      @default(true)
   createdBy             String

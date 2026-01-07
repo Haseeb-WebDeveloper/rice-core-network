@@ -47,9 +47,18 @@ export async function subscribeToPlan(formData: FormData) {
 
     // Validate amount
     const minInvestment = Number(plan.minInvestment)
+    const maxInvestment = Number(plan.maxInvestment)
     if (validated.amount < minInvestment) {
       return {
         error: `Minimum investment amount is ${minInvestment.toLocaleString('en-US', {
+          style: 'currency',
+          currency: 'USD',
+        })}`,
+      }
+    }
+    if (validated.amount > maxInvestment) {
+      return {
+        error: `Maximum investment amount is ${maxInvestment.toLocaleString('en-US', {
           style: 'currency',
           currency: 'USD',
         })}`,

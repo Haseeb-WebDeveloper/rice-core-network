@@ -26,6 +26,7 @@ export default async function PlanDetailPage({ params }: PageProps) {
   }
 
   const minInvestment = Number(plan.minInvestment);
+  const maxInvestment = Number(plan.maxInvestment);
   const dailyProfit = Number(plan.dailyProfitPercentage);
   const walletId = process.env.WALLET_ID || "";
   const tokenName = process.env.TOKEN_NAME || "USDT(BEP20)";
@@ -65,6 +66,17 @@ export default async function PlanDetailPage({ params }: PageProps) {
           </span>
           <span className="font-medium font-mono">
             {minInvestment.toLocaleString("en-US", {
+              style: "currency",
+              currency: "USD",
+            })}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-foreground">
+            Maximum Investment
+          </span>
+          <span className="font-medium font-mono">
+            {maxInvestment.toLocaleString("en-US", {
               style: "currency",
               currency: "USD",
             })}
@@ -136,7 +148,11 @@ export default async function PlanDetailPage({ params }: PageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <SubscribeForm planId={plan.id} minInvestment={minInvestment} />
+          <SubscribeForm 
+            planId={plan.id} 
+            minInvestment={minInvestment}
+            maxInvestment={maxInvestment}
+          />
         </CardContent>
       </Card>
     </div>

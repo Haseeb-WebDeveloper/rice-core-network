@@ -9,8 +9,12 @@ const updatePlanSchema = z.object({
   name: z.string().min(1, 'Plan name is required').max(100, 'Plan name must be less than 100 characters'),
   description: z.string().optional(),
   minInvestment: z.number().min(0.01, 'Minimum investment must be greater than 0'),
+  maxInvestment: z.number().min(0.01, 'Maximum investment must be greater than 0'),
   dailyProfitPercentage: z.number().min(0, 'Daily profit percentage must be 0 or greater').max(100, 'Daily profit percentage cannot exceed 100%'),
   isActive: z.boolean(),
+}).refine((data) => data.maxInvestment >= data.minInvestment, {
+  message: 'Maximum investment must be greater than or equal to minimum investment',
+  path: ['maxInvestment'],
 })
 
 export async function updatePlan(planId: string, formData: FormData) {
@@ -35,6 +39,7 @@ export async function updatePlan(planId: string, formData: FormData) {
       name: formData.get('name'),
       description: formData.get('description') || undefined,
       minInvestment: parseFloat(formData.get('minInvestment') as string),
+      maxInvestment: parseFloat(formData.get('maxInvestment') as string),
       dailyProfitPercentage: parseFloat(formData.get('dailyProfitPercentage') as string),
       isActive: formData.get('isActive') === 'true' || formData.get('isActive') === 'on',
     })
@@ -46,6 +51,7 @@ export async function updatePlan(planId: string, formData: FormData) {
         name: validated.name,
         description: validated.description,
         minInvestment: validated.minInvestment,
+        maxInvestment: validated.maxInvestment,
         dailyProfitPercentage: validated.dailyProfitPercentage,
         isActive: validated.isActive,
       },

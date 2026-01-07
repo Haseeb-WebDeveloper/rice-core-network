@@ -12,9 +12,10 @@ import Image from "next/image";
 type SubscribeFormProps = {
   planId: string;
   minInvestment: number;
+  maxInvestment: number;
 };
 
-export function SubscribeForm({ planId, minInvestment }: SubscribeFormProps) {
+export function SubscribeForm({ planId, minInvestment, maxInvestment }: SubscribeFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -94,20 +95,26 @@ export function SubscribeForm({ planId, minInvestment }: SubscribeFormProps) {
           type="number"
           step="0.01"
           min={minInvestment}
-          placeholder={`Minimum: $${minInvestment.toLocaleString("en-US", {
+          max={maxInvestment}
+          placeholder={`Min: $${minInvestment.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })} - Max: $${maxInvestment.toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}`}
           required
           disabled={isPending}
         />
-        {/* <p className="text-xs text-muted-foreground">
-          Minimum investment: $
-          {minInvestment.toLocaleString("en-US", {
-            style: "currency",
-            currency: "USD",
+        <p className="text-xs text-muted-foreground">
+          Investment range: ${minInvestment.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })} - ${maxInvestment.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
           })}
-        </p> */}
+        </p>
       </div>
 
       <div className="space-y-2">

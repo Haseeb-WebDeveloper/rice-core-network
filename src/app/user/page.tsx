@@ -10,7 +10,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import Image from "next/image";
-import { CopyButton } from "@/components/investments/copy-button";
 import { maxChar } from "@/lib/max-char";
 import { prisma } from "@/lib/prisma";
 import { ReferralLink } from "@/components/user/referral-link";
