@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/provider/provider";
 import { geistMono, geistSans, neueHaas, montserrat } from "@/lib/fonts";
+import { LaunchCountdownWrapper } from "@/components/launch-countdown-wrapper";
 
 export const metadata: Metadata = {
   title: {
@@ -36,7 +37,7 @@ export default function RootLayout({
     >
       <body className="antialiased font-neue" suppressHydrationWarning>
         <Providers>
-          <main className=" min-h-screen">{children}</main>
+          <LaunchCountdownWrapper>{children}</LaunchCountdownWrapper>
         </Providers>
       </body>
     </html>
