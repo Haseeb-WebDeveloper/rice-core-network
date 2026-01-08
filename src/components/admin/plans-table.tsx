@@ -60,6 +60,7 @@ type PlanData = {
   name: string
   description: string | null
   minInvestment: number
+  maxInvestment: number
   dailyProfitPercentage: number
   isActive: boolean
   createdAt: Date
@@ -83,6 +84,7 @@ function PlanFormDialog({
     name: plan?.name || '',
     description: plan?.description || '',
     minInvestment: plan?.minInvestment.toString() || '',
+    maxInvestment: plan?.maxInvestment.toString() || '',
     dailyProfitPercentage: plan?.dailyProfitPercentage.toString() || '',
     isActive: plan?.isActive ?? true,
   })
@@ -164,6 +166,27 @@ function PlanFormDialog({
               className="font-mono"
               placeholder="0.00"
             />
+          </div>
+
+          {/* Max Investment */}
+          <div className="space-y-2">
+            <Label htmlFor="maxInvestment">Maximum Investment ($) *</Label>
+            <Input
+              id="maxInvestment"
+              name="maxInvestment"
+              type="number"
+              step="0.01"
+              min="0.01"
+              value={formData.maxInvestment}
+              onChange={(e) => setFormData({ ...formData, maxInvestment: e.target.value })}
+              required
+              disabled={isPending}
+              className="font-mono"
+              placeholder="0.00"
+            />
+            <p className="text-xs text-muted-foreground">
+              Maximum investment amount allowed for this plan
+            </p>
           </div>
 
           {/* Daily Profit Percentage */}
@@ -249,20 +272,26 @@ const columns: ColumnDef<PlanData>[] = [
     size: 200,
   },
   {
-    header: 'Description',
-    accessorKey: 'description',
-    cell: ({ row }) => (
-      <div className="max-w-md text-sm text-muted-foreground">
-        {row.original.description || '—'}
-      </div>
-    ),
-    size: 300,
-  },
-  {
     header: 'Min Investment',
     accessorKey: 'minInvestment',
     cell: ({ row }) => {
       const amount = row.getValue('minInvestment') as number
+      return (
+        <div className="font-medium font-mono">
+          {new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+          }).format(amount)}
+        </div>
+      )
+    },
+    size: 150,
+  },
+  {
+    header: 'Max Investment',
+    accessorKey: 'maxInvestment',
+    cell: ({ row }) => {
+      const amount = row.getValue('maxInvestment') as number
       return (
         <div className="font-medium font-mono">
           {new Intl.NumberFormat('en-US', {

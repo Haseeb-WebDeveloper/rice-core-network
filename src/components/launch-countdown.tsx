@@ -1,20 +1,21 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Clock } from "lucide-react";
 import confetti from "canvas-confetti";
+import { LAUNCH_DATE } from "@/constants/limit";
 
-const LAUNCH_DATE = new Date("2026-01-08T10:00:00").getTime();
+interface LaunchCountdownProps {
+  onLaunch?: () => void;
+}
 
-export function LaunchCountdown() {
+export function LaunchCountdown({ onLaunch }: LaunchCountdownProps) {
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
     hours: number;
     minutes: number;
     seconds: number;
   } | null>(null);
-  const [isLaunched, setIsLaunched] = useState(false);
   const confettiFired = useRef(false);
 
   useEffect(() => {
@@ -23,12 +24,12 @@ export function LaunchCountdown() {
       const difference = LAUNCH_DATE - now;
 
       if (difference <= 0) {
-        setIsLaunched(true);
-        
         // Trigger confetti effect when timer reaches zero
         if (!confettiFired.current) {
           confettiFired.current = true;
           triggerLaunchConfetti();
+          // Notify parent component that launch has occurred
+          onLaunch?.();
         }
         
         return null;
@@ -102,10 +103,10 @@ export function LaunchCountdown() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [onLaunch]);
 
-  // Don't render if launched
-  if (isLaunched || !timeLeft) {
+  // Don't render if launched (timeLeft is null when launched)
+  if (!timeLeft) {
     return null;
   }
 

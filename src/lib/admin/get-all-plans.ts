@@ -23,6 +23,7 @@ export async function getAllPlans() {
       name: plan.name,
       description: plan.description,
       minInvestment: Number(plan.minInvestment),
+      maxInvestment: Number(plan.maxInvestment),
       dailyProfitPercentage: Number(plan.dailyProfitPercentage),
       isActive: plan.isActive,
       createdAt: plan.createdAt,
