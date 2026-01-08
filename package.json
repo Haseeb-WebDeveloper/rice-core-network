@@ -12,7 +12,8 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "create-admin": "tsx scripts/create-admin.ts",
-    "create-auth-users": "tsx scripts/create-auth-for-test-users.ts"
+    "create-auth-users": "tsx scripts/create-auth-for-test-users.ts",
+    "delete-auth-users": "tsx scripts/create-auth-for-test-users.ts delete"
   },
   "dependencies": {
     "@number-flow/react": "^0.5.10",
