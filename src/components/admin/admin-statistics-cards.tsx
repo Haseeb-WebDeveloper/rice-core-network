@@ -59,13 +59,14 @@ export function AdminStatisticsCards({ statistics }: AdminStatisticsCardsProps) 
           icon={TrendingUp}
           label="Active Investments"
           value={displayStats.activeInvestments}
+          className="border-y border-r lg:border-r-0"
         />
 
         <StatCard
           icon={Clock}
           label="Pending Approvals"
           value={displayStats.pendingInvestments}
-          valueClassName="text-yellow-600 dark:text-yellow-500"
+          className="border-x border-b lg:border-t"
         />
 
         <StatCard
@@ -73,6 +74,7 @@ export function AdminStatisticsCards({ statistics }: AdminStatisticsCardsProps) 
           label="Total Investment"
           value={Number(displayStats.totalInvestmentAmount)}
           format={currencyFormat}
+          className="border-r border-b lg:border-t"
         />
       </div>
     </NumberFlowGroup>
