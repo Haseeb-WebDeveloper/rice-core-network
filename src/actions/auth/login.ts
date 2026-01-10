@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -17,6 +18,31 @@ export async function login(formData: FormData) {
       password: formData.get('password'),
     })
 
+    // Check user status before attempting login
+    const dbUser = await prisma.user.findUnique({
+      where: { email: validated.email },
+      select: {
+        deletedAt: true,
+        isActive: true,
+        isSuspended: true,
+      },
+    })
+
+    // Check if user exists and is not deleted
+    if (!dbUser || dbUser.deletedAt !== null) {
+      return { error: 'Invalid email or password' }
+    }
+
+    // Check if user is deactivated
+    if (!dbUser.isActive) {
+      return { error: 'Your account has been deactivated. Please contact support.' }
+    }
+
+    // Check if user is suspended
+    if (dbUser.isSuspended) {
+      return { error: 'Your account has been suspended. Please contact support.' }
+    }
+
     const supabase = await createClient()
 
     // Sign in with Supabase
@@ -31,6 +57,22 @@ export async function login(formData: FormData) {
 
     if (!data.user) {
       return { error: 'Login failed' }
+    }
+
+    // Double-check user status after successful Supabase auth (in case status changed)
+    const finalCheck = await prisma.user.findUnique({
+      where: { email: validated.email },
+      select: {
+        deletedAt: true,
+        isActive: true,
+        isSuspended: true,
+      },
+    })
+
+    if (!finalCheck || finalCheck.deletedAt !== null || !finalCheck.isActive || finalCheck.isSuspended) {
+      // Sign out the user if they're not allowed
+      await supabase.auth.signOut()
+      return { error: 'Your account has been disabled. Please contact support.' }
     }
 
     revalidatePath('/', 'layout')

@@ -141,14 +141,11 @@ export function LaunchCountdown({ onLaunch }: LaunchCountdownProps) {
               {String(timeLeft.seconds).padStart(2, "0")}
             </div>
           </div>
-          <div className="flex items-center justify-center gap-4 md:gap-10 flex-wrap mt-2">
-            <div className="text-sm text-muted-foreground uppercase tracking-wide min-w-12 text-center">Days</div>
-            <div className="min-w-0" />
-            <div className="text-sm text-muted-foreground uppercase tracking-wide min-w-12 text-center">Hours</div>
-            <div className="min-w-0" />
-            <div className="text-sm text-muted-foreground uppercase tracking-wide min-w-12 text-center">Minutes</div>
-            <div className="min-w-0" />
-            <div className="text-sm text-muted-foreground uppercase tracking-wide min-w-12 text-center">Seconds</div>
+          <div className="grid grid-cols-4 items-center justify-center gap-4 md:gap-10 flex-wrap mt-2 w-full">
+            <div className="text-sm text-muted-foreground uppercase tracking-wide text-center">Days</div>
+            <div className="text-sm text-muted-foreground uppercase tracking-wide text-center">Hours</div>
+            <div className="text-sm text-muted-foreground uppercase tracking-wide text-center">Minutes</div>
+            <div className="text-sm text-muted-foreground uppercase tracking-wide text-center">Seconds</div>
           </div>
         </div>
 

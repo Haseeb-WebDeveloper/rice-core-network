@@ -8,6 +8,8 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
@@ -56,6 +58,12 @@ import {
   User,
   Eye,
   Trash2,
+  MoreVertical,
+  Ban,
+  CheckCircle2,
+  XCircle,
+  Power,
+  PowerOff,
 } from 'lucide-react'
 import { useId, useMemo, useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
@@ -72,6 +80,9 @@ import {
 } from '@/components/ui/alert-dialog'
 import { UserDetailsDialog } from './user-details-dialog'
 import { deleteUsers } from '@/actions/admin/delete-users'
+import { suspendUser } from '@/actions/admin/suspend-user'
+import { activateUser } from '@/actions/admin/activate-user'
+import { deleteUser } from '@/actions/admin/delete-user'
 
 type UserData = {
   id: string
@@ -258,17 +269,59 @@ const columns: ColumnDef<UserData>[] = [
     header: 'Actions',
     cell: ({ row, table }) => {
       const user = row.original
-      const meta = table.options.meta as { onViewUser?: (userId: string) => void }
+      const meta = table.options.meta as {
+        onViewUser?: (userId: string) => void
+        onSuspendUser?: (userId: string, suspend: boolean) => void
+        onActivateUser?: (userId: string, activate: boolean) => void
+        onDeleteUser?: (userId: string) => void
+        isPending?: boolean
+      }
       return (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => meta?.onViewUser?.(user.id)}
-          className="h-8 w-8"
-        >
-          <Eye className="h-4 w-4" />
-          <span className="sr-only">View user details</span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={meta?.isPending}>
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => meta?.onViewUser?.(user.id)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View Details
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {user.isSuspended ? (
+              <DropdownMenuItem onClick={() => meta?.onSuspendUser?.(user.id, false)}>
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Unsuspend User
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={() => meta?.onSuspendUser?.(user.id, true)}>
+                <Ban className="mr-2 h-4 w-4" />
+                Suspend User
+              </DropdownMenuItem>
+            )}
+            {user.isActive ? (
+              <DropdownMenuItem onClick={() => meta?.onActivateUser?.(user.id, false)}>
+                <PowerOff className="mr-2 h-4 w-4" />
+                Deactivate User
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={() => meta?.onActivateUser?.(user.id, true)}>
+                <Power className="mr-2 h-4 w-4" />
+                Activate User
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => meta?.onDeleteUser?.(user.id)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete User
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )
     },
     size: 80,
@@ -293,6 +346,9 @@ export function UsersTable({ data }: UsersTableProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [actionUserId, setActionUserId] = useState<string | null>(null)
+  const [actionType, setActionType] = useState<'suspend' | 'unsuspend' | 'activate' | 'deactivate' | 'delete' | null>(null)
+  const [actionDialogOpen, setActionDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   const [sorting, setSorting] = useState<SortingState>([
@@ -301,6 +357,24 @@ export function UsersTable({ data }: UsersTableProps) {
       desc: true,
     },
   ])
+
+  const handleSuspendUser = (userId: string, suspend: boolean) => {
+    setActionUserId(userId)
+    setActionType(suspend ? 'suspend' : 'unsuspend')
+    setActionDialogOpen(true)
+  }
+
+  const handleActivateUser = (userId: string, activate: boolean) => {
+    setActionUserId(userId)
+    setActionType(activate ? 'activate' : 'deactivate')
+    setActionDialogOpen(true)
+  }
+
+  const handleDeleteUserAction = (userId: string) => {
+    setActionUserId(userId)
+    setActionType('delete')
+    setActionDialogOpen(true)
+  }
 
   const table = useReactTable({
     data,
@@ -325,6 +399,10 @@ export function UsersTable({ data }: UsersTableProps) {
       onViewUser: (userId: string) => {
         setSelectedUserId(userId)
       },
+      onSuspendUser: handleSuspendUser,
+      onActivateUser: handleActivateUser,
+      onDeleteUser: handleDeleteUserAction,
+      isPending,
     },
   })
 
@@ -342,6 +420,78 @@ export function UsersTable({ data }: UsersTableProps) {
         router.refresh()
       }
     })
+  }
+
+  const executeAction = () => {
+    if (!actionUserId || !actionType) return
+
+    startTransition(async () => {
+      let result
+      
+      switch (actionType) {
+        case 'suspend':
+          result = await suspendUser(actionUserId, true)
+          break
+        case 'unsuspend':
+          result = await suspendUser(actionUserId, false)
+          break
+        case 'activate':
+          result = await activateUser(actionUserId, true)
+          break
+        case 'deactivate':
+          result = await activateUser(actionUserId, false)
+          break
+        case 'delete':
+          result = await deleteUser(actionUserId)
+          break
+      }
+
+      if (result?.error) {
+        alert(result.error)
+      } else {
+        setActionDialogOpen(false)
+        setActionUserId(null)
+        setActionType(null)
+        router.refresh()
+      }
+    })
+  }
+
+  const getActionDialogContent = () => {
+    if (!actionType || !actionUserId) return { title: '', description: '' }
+    
+    const user = data.find(u => u.id === actionUserId)
+    const userName = user?.fullName || user?.email || 'this user'
+
+    switch (actionType) {
+      case 'suspend':
+        return {
+          title: 'Suspend User',
+          description: `Are you sure you want to suspend ${userName}? They will not be able to access their account.`,
+        }
+      case 'unsuspend':
+        return {
+          title: 'Unsuspend User',
+          description: `Are you sure you want to unsuspend ${userName}? They will be able to access their account again.`,
+        }
+      case 'activate':
+        return {
+          title: 'Activate User',
+          description: `Are you sure you want to activate ${userName}?`,
+        }
+      case 'deactivate':
+        return {
+          title: 'Deactivate User',
+          description: `Are you sure you want to deactivate ${userName}? They will not be able to access their account.`,
+        }
+      case 'delete':
+        return {
+          title: 'Delete User',
+          description: `Are you sure you want to delete ${userName}? This action cannot be undone.`,
+        }
+      default:
+        return { title: '', description: '' }
+    }
   }
 
   // Get unique role values
@@ -744,6 +894,38 @@ export function UsersTable({ data }: UsersTableProps) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Individual User Action Confirmation Dialog */}
+      <AlertDialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{getActionDialogContent().title}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {getActionDialogContent().description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending} onClick={() => {
+              setActionDialogOpen(false)
+              setActionUserId(null)
+              setActionType(null)
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={executeAction}
+              disabled={isPending}
+              className={
+                actionType === 'delete' || actionType === 'suspend' || actionType === 'deactivate'
+                  ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                  : ''
+              }
+            >
+              {isPending ? 'Processing...' : 'Confirm'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

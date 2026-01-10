@@ -6,4 +6,4 @@ export const COMMISSION_PERCENTAGES = {
 } as const;
 
 
-export const LAUNCH_DATE = new Date("2026-01-08T10:00:00").getTime();
+export const LAUNCH_DATE = new Date("2026-01-08T09:00:00").getTime();

@@ -42,17 +42,44 @@ export async function updateSession(request: NextRequest) {
   const isAdminRoute = pathname.startsWith('/admin')
   const isUserRoute = pathname.startsWith('/user')
 
-  // Get user role if authenticated
+  // Get user role and status if authenticated
   let userRole: 'ADMIN' | 'USER' | null = null
+  let isUserValid = false
   if (user?.email) {
     try {
       const dbUser = await prisma.user.findUnique({
         where: { email: user.email },
-        select: { role: true },
+        select: {
+          role: true,
+          deletedAt: true,
+          isActive: true,
+          isSuspended: true,
+        },
       })
-      userRole = dbUser?.role || null
+      
+      // Check if user exists, is not deleted, is active, and not suspended
+      if (dbUser && dbUser.deletedAt === null && dbUser.isActive && !dbUser.isSuspended) {
+        userRole = dbUser.role || null
+        isUserValid = true
+      } else {
+        // User is deleted, deactivated, or suspended - sign them out
+        isUserValid = false
+        // Sign out - this will clear auth cookies through Supabase's cookie management
+        await supabase.auth.signOut()
+        // Redirect to login - cookies will be cleared by the signOut call above
+        // which updates supabaseResponse through the setAll callback
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        const logoutResponse = NextResponse.redirect(url)
+        // Copy all cookies from supabaseResponse (including cleared auth cookies from signOut)
+        supabaseResponse.cookies.getAll().forEach((cookie) => {
+          logoutResponse.cookies.set(cookie.name, cookie.value, cookie)
+        })
+        return logoutResponse
+      }
     } catch (error) {
-      console.error('Error fetching user role in middleware:', error)
+      console.error('Error fetching user in middleware:', error)
+      isUserValid = false
     }
   }
 
@@ -68,8 +95,8 @@ export async function updateSession(request: NextRequest) {
     return redirectResponse
   }
 
-  // Handle authenticated users
-  if (user) {
+  // Handle authenticated users (only if user is valid)
+  if (user && isUserValid) {
     // Redirect authenticated users away from auth pages
     if (isAuthPage) {
       const url = request.nextUrl.clone()
@@ -113,6 +140,18 @@ export async function updateSession(request: NextRequest) {
       })
       return redirectResponse
     }
+  } else if (user && !isUserValid) {
+    // User is authenticated but invalid (deleted/deactivated/suspended)
+    // Sign them out and redirect to login page
+    await supabase.auth.signOut()
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    const redirectResponse = NextResponse.redirect(url)
+    // Copy cookies from supabaseResponse which will include cleared auth cookies from signOut
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return redirectResponse
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're

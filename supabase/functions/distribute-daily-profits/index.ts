@@ -163,6 +163,14 @@ serve(async (req) => {
           continue
         }
 
+        if (!dailyProfit || !dailyProfit.id) {
+          console.error(
+            `Failed to get daily profit id after creation for investment ${profitData.investmentId}`
+          )
+          failedCount++
+          continue
+        }
+
         // Update Investment.totalProfit
         const { error: updateError } = await supabase
           .from('investments')
@@ -183,8 +191,23 @@ serve(async (req) => {
         // Create Transaction record
         // Note: Using camelCase field names as per Prisma schema
         const transactionId = crypto.randomUUID()
-        const now = new Date().toISOString()
-        const { error: transactionError } = await supabase.from('transactions').insert({
+        const transactionNow = new Date().toISOString()
+        
+        // Validate required fields
+        if (!transactionId || typeof transactionId !== 'string') {
+          console.error(`Invalid transaction ID generated for daily profit ${dailyProfit.id}`)
+          failedCount++
+          continue
+        }
+        
+        if (!dailyProfit.id) {
+          console.error(`Daily profit ID is missing for investment ${profitData.investmentId}`)
+          failedCount++
+          continue
+        }
+        
+        // Ensure all values are properly defined
+        const transactionDataToInsert = {
           id: transactionId,
           userId: profitData.userId,
           type: 'DAILY_PROFIT',
@@ -193,9 +216,13 @@ serve(async (req) => {
           description: `Daily profit from investment`,
           relatedId: dailyProfit.id,
           relatedType: 'DailyProfit',
-          createdAt: now,
-          updatedAt: now,
-        })
+          createdAt: transactionNow,
+          updatedAt: transactionNow,
+        }
+
+        const { error: transactionError } = await supabase
+          .from('transactions')
+          .insert(transactionDataToInsert)
 
         if (transactionError) {
           console.error(

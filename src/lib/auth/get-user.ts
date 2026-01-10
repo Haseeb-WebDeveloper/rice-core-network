@@ -16,6 +16,13 @@ export async function getCurrentUser() {
     where: { email: authUser.email! },
   })
 
+  // Return null if user doesn't exist, is deleted, deactivated, or suspended
+  if (!user || user.deletedAt !== null || !user.isActive || user.isSuspended) {
+    // Sign out the user if their account is invalid
+    await supabase.auth.signOut()
+    return null
+  }
+
   return user
 }
 
